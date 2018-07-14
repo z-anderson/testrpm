@@ -7,11 +7,9 @@ unsigned long lastMagTime;
 unsigned long startTime;
 unsigned long endTime;
 float rpm;
-bool done = false; // reset to true in end()
-int numRevIgnore = 5; // * making an assumption that we will hit this
-
-//TODO = discount for 10 (or whatever) magnet detections
-// to let it get up to speed 
+bool done = false; // set to true after displaying rpm once so it doesn't print continuously
+int lapseTime = 20;
+int numRevIgnore = 5; 
 
 void setup()
 {
@@ -23,20 +21,15 @@ void setup()
 }
 
 void loop()
-{
-  // millis() is a very large number, and lastmagtime is initliazed to zero 
-  
-  if ((millis() / 1000 - lastMagTime) >= 20 && !done)
+{  
+  if ((millis() / 1000 - lastMagTime) >= lapseTime && !done)
   {
-    //Serial.println("done:");
-    Serial.println(done);
-//    Serial.println("end time");
-//    Serial.println(millis() / 1000);
     end(); 
     //Serial.end();
   }
+  
   hallState = analogRead(hallPin);
-  if (hallState <= 500)
+  if (hallState <= 500) // TODO = recheck for each magnet. low when magnet present; ~1000 when magnet not present
   {
     magnet = true;
   }
@@ -44,10 +37,11 @@ void loop()
   {
     magnet = false;
   }
-  
+
+  // check if there's a change in whether or not the magnet is there, and if the magnet is there now
   if (magnet != prevMagnet && magnet)
   {
-    Serial.println("changed");
+    //Serial.println("changed");
     //Serial.println(hallState);
     magnetCount++;
     if (magnetCount == numRevIgnore)
@@ -57,30 +51,29 @@ void loop()
     lastMagTime = millis() / 1000;
 //    Serial.println("lastMagTime");
 //    Serial.println(lastMagTime);
-      Serial.println(magnetCount);
+//    Serial.println(magnetCount);
   } 
   prevMagnet = magnet; 
 }
 
 void end() // 
 {
- endTime = millis() / 1000; // / 60;
- //Serial.println(time);
+  // calculate rpm = # times magnet detecetd / total time * 60
+ endTime = millis() / 1000;
 // Serial.println("magnetCount");
 // Serial.println(magnetCount);
- Serial.println("times");
- Serial.println(endTime);
- Serial.println(startTime);
-// Serial.println(startTime / 60);
+// Serial.println("times");
+// Serial.println(endTime);
+// Serial.println(startTime);
  if (magnetCount >= numRevIgnore)
  {
-  Serial.println("magnet count");
-  Serial.println(magnetCount);
-  rpm = (magnetCount - numRevIgnore) / (endTime - startTime - 20) * 60;  // 20 = gap time
+//  Serial.println("magnet count");
+//  Serial.println(magnetCount);
+  rpm = (magnetCount - numRevIgnore) / (endTime - startTime - lapseTime) * 60;  
  }
  else
  {
-  rpm = rpm = magnetCount / (endTime - startTime - 20) * 60; // 20 = gap time
+  rpm = magnetCount / (endTime - startTime - lapseTime) * 60; 
  }
  
  Serial.println("RPM");
