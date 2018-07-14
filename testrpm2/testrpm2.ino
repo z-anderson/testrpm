@@ -7,6 +7,7 @@ unsigned long lastMagTime;
 unsigned long startTime;
 unsigned long endTime;
 float rpm;
+bool done = false; // reset to true in end()
 
 void setup()
 {
@@ -21,12 +22,14 @@ void loop()
 {
   // millis() is a very large number, and lastmagtime is initliazed to zero 
   
-  if ((millis() / 1000 - lastMagTime) >= 20)
+  if ((millis() / 1000 - lastMagTime) >= 20 && !done)
   {
+    //Serial.println("done:");
+    Serial.println(done);
 //    Serial.println("end time");
 //    Serial.println(millis() / 1000);
     end(); 
-    Serial.end();
+    //Serial.end();
   }
   //Serial.print("test\n");
   hallState = analogRead(hallPin);
@@ -43,13 +46,13 @@ void loop()
 
   if (magnet != prevMagnet && magnet)
   {
-    //Serial.println("changed");
+    Serial.println("changed");
     //Serial.println(hallState);
     magnetCount++;
     lastMagTime = millis() / 1000;
 //    Serial.println("lastMagTime");
 //    Serial.println(lastMagTime);
-//    Serial.println(magnetCount);
+      Serial.println(magnetCount);
   } 
   prevMagnet = magnet; 
 }
@@ -66,6 +69,7 @@ void end() //
  rpm = magnetCount / (endTime - startTime - 20) * 60; // / 60); // 20 = gap time
  Serial.println("RPM");
  Serial.println(rpm);
+ done = true;
 }
 
 
