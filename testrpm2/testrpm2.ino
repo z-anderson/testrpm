@@ -8,6 +8,10 @@ unsigned long startTime;
 unsigned long endTime;
 float rpm;
 bool done = false; // reset to true in end()
+int numRevIgnore = 5; // * making an assumption that we will hit this
+
+//TODO = discount for 10 (or whatever) magnet detections
+// to let it get up to speed 
 
 void setup()
 {
@@ -31,9 +35,7 @@ void loop()
     end(); 
     //Serial.end();
   }
-  //Serial.print("test\n");
   hallState = analogRead(hallPin);
-
   if (hallState <= 500)
   {
     magnet = true;
@@ -43,12 +45,15 @@ void loop()
     magnet = false;
   }
   
-
   if (magnet != prevMagnet && magnet)
   {
     Serial.println("changed");
     //Serial.println(hallState);
     magnetCount++;
+    if (magnetCount == numRevIgnore)
+    {
+      startTime = millis() / 1000;
+    }
     lastMagTime = millis() / 1000;
 //    Serial.println("lastMagTime");
 //    Serial.println(lastMagTime);
@@ -63,10 +68,21 @@ void end() //
  //Serial.println(time);
 // Serial.println("magnetCount");
 // Serial.println(magnetCount);
-// Serial.println("times");
-// Serial.println(endTime);
+ Serial.println("times");
+ Serial.println(endTime);
+ Serial.println(startTime);
 // Serial.println(startTime / 60);
- rpm = magnetCount / (endTime - startTime - 20) * 60; // / 60); // 20 = gap time
+ if (magnetCount >= numRevIgnore)
+ {
+  Serial.println("magnet count");
+  Serial.println(magnetCount);
+  rpm = (magnetCount - numRevIgnore) / (endTime - startTime - 20) * 60;  // 20 = gap time
+ }
+ else
+ {
+  rpm = rpm = magnetCount / (endTime - startTime - 20) * 60; // 20 = gap time
+ }
+ 
  Serial.println("RPM");
  Serial.println(rpm);
  done = true;
